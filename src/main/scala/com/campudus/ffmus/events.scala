@@ -46,8 +46,8 @@ case class UserClickedEvent(userId: String, x: Int, y: Int) extends Event(EventT
       s"""
          |{
          |  "userId": "$userId",
-         |  "x": "$x",
-         |  "y": "$y"
+         |  "x": $x,
+         |  "y": $y
          |}
        """.stripMargin)
   }

@@ -64,11 +64,11 @@ class LoggedInGameVerticleTest extends LazyLogging {
   def userJoinEvent(context: TestContext): Unit = {
     val async = context.async()
 
-    eventBus.consumer(GameVerticle.ADDRESS, { message: Message[JsonObject] =>
+    eventBus.consumer(GameVerticle.OUTGOING_ADDRESS, { message: Message[JsonObject] =>
       context.assertNotNull(message.body())
       val json = message.body()
       context.assertTrue(json.containsKey("type"))
-      context.assertEquals("USER_JOIN", json.getString("type"))
+      context.assertEquals(EventTypes.USER_JOIN, json.getString("type"))
       context.assertTrue(json.containsKey("payload"))
       context.assertTrue(json.getJsonObject("payload").containsKey("id"))
       context.assertTrue(json.getJsonObject("payload").containsKey("name"))
@@ -76,11 +76,11 @@ class LoggedInGameVerticleTest extends LazyLogging {
       async.complete()
     })
 
-    eventBus.send(GameVerticle.ADDRESS, new JsonObject(
+    eventBus.send(GameVerticle.INCOMING_ADDRESS, new JsonObject(
       s"""
-        |{
-        |  "type" : "${EventTypes.LOGIN}"
-        |}
+         |{
+         |  "type" : "${EventTypes.LOGIN}"
+         |}
       """.stripMargin))
   }
 
@@ -88,8 +88,22 @@ class LoggedInGameVerticleTest extends LazyLogging {
   def sendingClickResultsInMessage(context: TestContext): Unit = {
     val async = context.async()
     val eventBus = vertx.eventBus()
+    val x = 1
+    val y = 1
 
     eventBus.consumer(GameVerticle.OUTGOING_ADDRESS, { message: Message[JsonObject] =>
+      val json = message.body()
+      context.assertTrue(json.containsKey("type"))
+      context.assertEquals(EventTypes.USER_CLICKED, json.getString("type"))
+      context.assertTrue(json.containsKey("payload"))
+      context.assertTrue(json.getJsonObject("payload").containsKey("userId"))
+      context.assertTrue(json.getJsonObject("payload").containsKey("x"))
+      context.assertTrue(json.getJsonObject("payload").containsKey("y"))
+
+      context.assertEquals(context.get("userId"), json.getJsonObject("payload").getString("userId"))
+      context.assertEquals(x, json.getJsonObject("payload").getInteger("x"))
+      context.assertEquals(y, json.getJsonObject("payload").getInteger("y"))
+
       async.complete()
     })
 
@@ -99,11 +113,10 @@ class LoggedInGameVerticleTest extends LazyLogging {
          |  "type" : "${EventTypes.USER_CLICK}",
          |  "payload" : {
          |    "userId" : "${context.get("userId")}",
-         |    "x" : 1,
-         |    "y" : 1
+         |    "x" : $x,
+         |    "y" : $y
          |  }
          |}
       """.stripMargin))
   }
-
 }
