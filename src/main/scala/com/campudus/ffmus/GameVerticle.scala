@@ -1,9 +1,10 @@
 package com.campudus.ffmus
 
+import java.util
 import java.util.UUID
 
 import io.vertx.core.eventbus.Message
-import io.vertx.core.json.JsonObject
+import io.vertx.core.json.{JsonArray, JsonObject}
 import io.vertx.scala.ScalaVerticle
 
 import scala.collection.mutable
@@ -46,6 +47,8 @@ class GameVerticle extends ScalaVerticle {
     val color = colorGenerator.random()
 
     val event = UserJoinEvent(id, name, color)
+    val allEventsToReply = events.map(_.toJson.encode()).mkString("[", ",", "]")
+
     events += event
 
     message.reply(new JsonObject(
@@ -55,7 +58,8 @@ class GameVerticle extends ScalaVerticle {
          |  "payload" : {
          |    "id" : "$id",
          |    "name" : "$name",
-         |    "color" : "$color"
+         |    "color" : "$color",
+         |    "events" : ${new JsonArray(allEventsToReply)}
          |  }
          |}
       """.stripMargin))

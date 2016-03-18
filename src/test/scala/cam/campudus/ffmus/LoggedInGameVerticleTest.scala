@@ -119,4 +119,84 @@ class LoggedInGameVerticleTest extends LazyLogging {
          |}
       """.stripMargin))
   }
+
+  @Test
+  def reveiveAllEventsAfterLogin(context: TestContext): Unit = {
+    val async = context.async()
+    val x1 = 1
+    val y1 = 1
+    val x2 = 2
+    val y2 = 2
+    val userId: String = context.get("userId")
+
+    eventBus.send(GameVerticle.INCOMING_ADDRESS, new JsonObject(
+      s"""
+         |{
+         |  "type" : "${EventTypes.USER_CLICK}",
+         |  "payload" : {
+         |    "userId" : "$userId",
+         |    "x" : $x1,
+         |    "y" : $y1
+         |  }
+         |}
+      """.stripMargin))
+
+    eventBus.send(GameVerticle.INCOMING_ADDRESS, new JsonObject(
+      s"""
+         |{
+         |  "type" : "${EventTypes.USER_CLICK}",
+         |  "payload" : {
+         |    "userId" : "$userId",
+         |    "x" : $x2,
+         |    "y" : $y2
+         |  }
+         |}
+      """.stripMargin))
+
+    eventBus.send(GameVerticle.INCOMING_ADDRESS, new JsonObject(
+      s"""
+         |{
+         |  "type" : "${EventTypes.LOGIN}"
+         |}
+      """.stripMargin), {
+      case Success(message) =>
+        context.assertNotNull(message.body())
+        val json = message.body()
+        logger.info(s"${json.encode()}")
+        context.assertTrue(json.containsKey("type"))
+        context.assertEquals(EventTypes.LOGIN_REPLY, json.getString("type"))
+        context.assertTrue(json.containsKey("payload"))
+        context.assertTrue(json.getJsonObject("payload").containsKey("id"))
+        context.assertTrue(json.getJsonObject("payload").containsKey("name"))
+        context.assertTrue(json.getJsonObject("payload").containsKey("color"))
+        context.assertTrue(json.getJsonObject("payload").containsKey("events"))
+        context.assertEquals(3, json.getJsonObject("payload").getJsonArray("events").size())
+
+        context.assertEquals(EventTypes.USER_JOIN, json.getJsonObject("payload").getJsonArray("events").getJsonObject(0).getString("type"))
+        context.assertEquals(new JsonObject(
+          s"""
+             |{
+             |  "type" : "${EventTypes.USER_CLICKED}",
+             |  "payload" : {
+             |    "userId" : "$userId",
+             |    "x" : $x1,
+             |    "y" : $y1
+             |  }
+             |}
+           """.stripMargin), json.getJsonObject("payload").getJsonArray("events").getJsonObject(1))
+        context.assertEquals(new JsonObject(
+          s"""
+             |{
+             |  "type" : "${EventTypes.USER_CLICKED}",
+             |  "payload" : {
+             |    "userId" : "$userId",
+             |    "x" : $x2,
+             |    "y" : $y2
+             |  }
+             |}
+           """.stripMargin), json.getJsonObject("payload").getJsonArray("events").getJsonObject(2))
+        async.complete()
+      case Failure(ex) => context.fail(ex)
+    }: Try[Message[JsonObject]] => Unit)
+  }
 }
