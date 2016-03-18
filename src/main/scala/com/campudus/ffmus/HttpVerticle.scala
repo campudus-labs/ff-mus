@@ -1,9 +1,10 @@
 package com.campudus.ffmus
 
 import io.vertx.core.http.{HttpServer, HttpServerRequest}
+import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.StaticHandler
-import io.vertx.ext.web.handler.sockjs.{BridgeEvent, PermittedOptions, BridgeOptions, SockJSHandler}
+import io.vertx.ext.web.handler.sockjs._
 import io.vertx.scala.ScalaVerticle
 import io.vertx.scala.FunctionConverters._
 
@@ -48,7 +49,27 @@ class HttpVerticle extends ScalaVerticle {
       .addOutboundPermitted(new PermittedOptions().setAddressRegex("mus\\..*"))
       .addInboundPermitted(new PermittedOptions().setAddressRegex("mus\\..*"))
 
-    sockJSHandler.bridge(options)
+    sockJSHandler.bridge(options, { event: BridgeEvent =>
+      event.`type`() match {
+        case BridgeEventType.SOCKET_CLOSED =>
+          vertx.eventBus().send(GameVerticle.INCOMING_ADDRESS, new JsonObject(
+            s"""
+               |{
+               |  "type" : "${EventTypes.LOGOUT}",
+               |  "socketId" : "${event.socket().writeHandlerID()}"
+               |}
+             """.stripMargin))
+        case BridgeEventType.SEND =>
+          val body = event.getRawMessage
+          val mesageBody = body.getJsonObject("body")
+          if (mesageBody.getString("type") == EventTypes.LOGIN) {
+            mesageBody.put("socketId", event.socket().writeHandlerID())
+            event.setRawMessage(body)
+          }
+        case _ =>
+      }
+      event.complete(true)
+    })
   }
 
 }

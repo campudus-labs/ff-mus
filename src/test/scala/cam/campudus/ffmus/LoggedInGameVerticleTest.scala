@@ -9,7 +9,7 @@ import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.{Timeout, VertxUnitRunner}
 import io.vertx.scala.FunctionConverters._
 import org.junit.runner.RunWith
-import org.junit.{Before, Rule, Test}
+import org.junit.{After, Before, Rule, Test}
 
 import scala.util.{Failure, Success, Try}
 
@@ -18,6 +18,7 @@ class LoggedInGameVerticleTest extends LazyLogging {
 
   val vertx: Vertx = Vertx.vertx()
   val eventBus = vertx.eventBus()
+  var deploymentId:String = null
 
   @Rule
   def rule = Timeout.seconds(1)
@@ -28,6 +29,7 @@ class LoggedInGameVerticleTest extends LazyLogging {
 
     vertx.deployVerticle(new GameVerticle, new DeploymentOptions(), {
       case Success(id) =>
+        deploymentId = id
         vertx.eventBus().send(GameVerticle.INCOMING_ADDRESS, new JsonObject(
           s"""
              |{
@@ -53,6 +55,30 @@ class LoggedInGameVerticleTest extends LazyLogging {
         context.fail(ex)
     }: Try[String] => Unit)
 
+  }
+
+  @After
+  def tearDown(context: TestContext): Unit = {
+    if (deploymentId != null) {
+      val async = context.async()
+      vertx.undeploy(deploymentId, {
+        case Success(_) =>
+          logger.info("Verticle undeployed!")
+          vertx.close({
+            case Success(_) =>
+              logger.info("Vertx closed!")
+              async.complete()
+            case Failure(e) =>
+              logger.error("Vertx couldn't be closed!", e)
+              context.fail(e)
+              async.complete()
+          }: Try[Void] => Unit)
+        case Failure(e) =>
+          logger.error("Verticle couldn't be undeployed!", e)
+          context.fail(e)
+          async.complete()
+      }: Try[Void] => Unit)
+    }
   }
 
   @Test
@@ -162,7 +188,6 @@ class LoggedInGameVerticleTest extends LazyLogging {
       case Success(message) =>
         context.assertNotNull(message.body())
         val json = message.body()
-        logger.info(s"${json.encode()}")
         context.assertTrue(json.containsKey("type"))
         context.assertEquals(EventTypes.LOGIN_REPLY, json.getString("type"))
         context.assertTrue(json.containsKey("payload"))
@@ -171,7 +196,6 @@ class LoggedInGameVerticleTest extends LazyLogging {
         context.assertTrue(json.getJsonObject("payload").containsKey("color"))
         context.assertTrue(json.getJsonObject("payload").containsKey("events"))
         context.assertEquals(3, json.getJsonObject("payload").getJsonArray("events").size())
-
         context.assertEquals(EventTypes.USER_JOIN, json.getJsonObject("payload").getJsonArray("events").getJsonObject(0).getString("type"))
         context.assertEquals(new JsonObject(
           s"""
