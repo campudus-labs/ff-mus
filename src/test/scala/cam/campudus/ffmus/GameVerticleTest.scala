@@ -1,6 +1,6 @@
 package cam.campudus.ffmus
 
-import com.campudus.ffmus.GameVerticle
+import com.campudus.ffmus.{EventTypes, GameVerticle}
 import com.typesafe.scalalogging.LazyLogging
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
@@ -40,16 +40,16 @@ class GameVerticleTest extends LazyLogging {
   def testLogin(context: TestContext): Unit = {
     val async = context.async()
     eventBus.send(GameVerticle.ADDRESS, new JsonObject(
-      """
+      s"""
         |{
-        |  "type" : "Login"
+        |  "type" : "${EventTypes.LOGIN}"
         |}
       """.stripMargin), {
       case Success(message) =>
         logger.info(s"got message: ${message.body().encode()}")
         val actualBody = message.body()
         val actualType = actualBody.getString("type")
-        val expectedType = "LoginReply"
+        val expectedType = EventTypes.LOGIN_REPLY
 
         val actualPayload = actualBody.getJsonObject("payload")
 

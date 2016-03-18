@@ -3,11 +3,11 @@ package com.campudus.ffmus
 import java.awt.Color
 import java.util.UUID
 
-import com.campudus.ffmus.models.Player
 import io.vertx.core.eventbus.Message
 import io.vertx.core.json.JsonObject
 import io.vertx.scala.ScalaVerticle
 
+import scala.collection.mutable
 import scala.concurrent.Promise
 import io.vertx.scala.FunctionConverters._
 
@@ -18,7 +18,7 @@ object GameVerticle {
 
 class GameVerticle extends ScalaVerticle {
 
-  val players = List[Player]()
+  val events = mutable.MutableList[Event]()
 
   val nameGenerator = new NameGenerator
   val colorGenerator = new ColorGenerator
@@ -31,7 +31,7 @@ class GameVerticle extends ScalaVerticle {
       val messageType = message.body().getString("type")
 
       messageType match {
-        case "Login" => handleLogin(message)
+        case EventTypes.LOGIN => handleLogin(message)
       }
     })
 
@@ -39,26 +39,27 @@ class GameVerticle extends ScalaVerticle {
   }
 
   def handleLogin(message: Message[JsonObject]) = {
-
-    //TODO generate name, id and color
-
+    val eventBus = vertx.eventBus()
     val id = UUID.randomUUID.toString
     val name = nameGenerator.random()
     val color = colorGenerator.random()
 
-    val newPlayer = Player(id, name, color)
+    val event = UserJoinEvent(id, name, color)
+    events += event
 
     message.reply(new JsonObject(
       s"""
          |{
-         |  "type" : "LoginReply",
+         |  "type" : "${EventTypes.LOGIN_REPLY}",
          |  "payload" : {
-         |    "id" : "${newPlayer.id}",
-         |    "name" : "${newPlayer.name}",
-         |    "color" : "${newPlayer.color}"
+         |    "id" : "$id",
+         |    "name" : "$name",
+         |    "color" : "$color"
          |  }
          |}
       """.stripMargin))
+
+    eventBus.send(GameVerticle.ADDRESS, event.toJson)
   }
 
   override def stop(p: Promise[Unit]): Unit = {
