@@ -10,10 +10,7 @@ describe('canvas reducer', () => {
 
     it('starts with empty tiles', () => {
       const state = canvasReducer();
-      state.get('tiles').every(row => {
-        console.log('every row', row);
-        return row.every(tile => tile.get('color') === null);
-      })
+      expect(state.get('tiles').every(row => row.every(tile => tile.get('color') === null))).to.equal(true);
     });
 
     it('starts with empty users', () => {
