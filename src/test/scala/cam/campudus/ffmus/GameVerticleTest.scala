@@ -37,19 +37,30 @@ class GameVerticleTest extends LazyLogging {
   }
 
   @Test
-  def test(context: TestContext): Unit = {
+  def testLogin(context: TestContext): Unit = {
     val async = context.async()
-    eventBus.send("mus.game", new JsonObject(
+    eventBus.send(GameVerticle.ADDRESS, new JsonObject(
       """
-        |{}
+        |{
+        |  "type" : "Login"
+        |}
       """.stripMargin), {
       case Success(message) =>
         logger.info(s"got message: ${message.body().encode()}")
+        val actualBody = message.body()
+        val actualType = actualBody.getString("type")
+        val expectedType = "LoginReply"
+
+        val actualPayload = actualBody.getJsonObject("payload")
+
+        context.assertEquals(expectedType, actualType)
+        context.assertNotNull(actualPayload.getString("id"))
+        context.assertNotNull(actualPayload.getString("color"))
+        context.assertNotNull(actualPayload.getString("name"))
+
         async.complete()
       case Failure(ex) => context.fail(ex)
     }: Try[Message[JsonObject]] => Unit)
-
-    context.assertTrue(true)
   }
 
 }
