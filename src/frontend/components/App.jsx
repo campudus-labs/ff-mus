@@ -1,24 +1,29 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import Menu from './Menu';
+import Canvas from './Canvas';
+import './app.scss';
 
-const AppScreen = (props) => {
+const App = (props) => {
+
+  const {canvas} = props;
+  console.log("canvas prop in App.jsx:", canvas);
+
   return (
     <div>
-      <Menu/>
-      <h1>App Screen</h1>
-      <div>isLoggedIn: {props.isLoggedIn}</div>
-      {props.children}
+      <div>
+        <Canvas x={canvas.get("x")}
+                y={canvas.get("y")}
+                width={canvas.get("width")}
+                height={canvas.get("height")}
+                users={canvas.get("users")}
+                tiles={canvas.get("tiles")}/>
+      </div>
     </div>
   );
 };
-AppScreen.propTypes = {
-  isLoggedIn : React.PropTypes.bool,
-  children : React.PropTypes.node
-};
 
 const mapStateToProps = state => {
-  return state.account.toJS();
+  return {canvas : state.app.get('canvas')};
 };
 
-export default connect(mapStateToProps)(AppScreen);
+export default connect(mapStateToProps)(App);

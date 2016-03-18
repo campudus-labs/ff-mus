@@ -58,6 +58,7 @@
     "karma-mocha-reporter": "^2.0.0",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^1.7.0",
+    "lodash": "^4.6.1",
     "mocha": "^2.4.5",
     "mocha-jsdom": "^1.1.0",
     "parallelshell": "^2.0.0",

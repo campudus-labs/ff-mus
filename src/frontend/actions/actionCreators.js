@@ -1,17 +1,8 @@
 import ActionTypes from './actionTypes';
 
-export function login(username, password) {
+export function setCanvasLayout(payload) {
   return {
-    type : ActionTypes.TRY_LOGIN,
-    username,
-    password
-  };
-}
-
-export function setAccount(username, id) {
-  return {
-    type : ActionTypes.SET_ACCOUNT,
-    username,
-    id
+    type : ActionTypes.SET_CANVAS_LAYOUT,
+    payload
   };
 }

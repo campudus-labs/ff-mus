@@ -1,0 +1,11 @@
+#users{
+  position: absolute;
+  right: -20px;
+  top: 0;
+  transform: translateX(100%);
+  .user {
+    display: block;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+}

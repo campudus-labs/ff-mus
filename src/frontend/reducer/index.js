@@ -1,5 +1,5 @@
 import Immutable from 'immutable';
-import accountReducer from './accountReducer';
+import canvas from './canvasReducer';
 import { routerReducer } from 'react-router-redux';
 import { combineReducers } from 'redux';
 
@@ -76,7 +76,7 @@ export function reducerFromStateAndMap(initialState, reducerMap) {
 }
 
 const reducer = combineReducers({
-  account : combineReducerMapToReducer(accountReducer),
+  app : combineReducerMapsToReducer({canvas}),
   routing : routerReducer
 });
 

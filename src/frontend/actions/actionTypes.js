@@ -1,6 +1,5 @@
 const ActionTypes = {
-  'TRY_LOGIN' : 'TRY_LOGIN',
-  'SET_ACCOUNT' : 'SET_ACCOUNT'
+  'SET_CANVAS_LAYOUT' : 'SET_CANVAS_LAYOUT'
 };
 
 export default ActionTypes;
