@@ -20,6 +20,9 @@ class GameVerticle extends ScalaVerticle {
 
   val players = List[Player]()
 
+  val nameGenerator = new NameGenerator
+  val colorGenerator = new ColorGenerator
+
   override def start(p: Promise[Unit]): Unit = {
     logger.info("starting GameVerticle")
     val eventBus = vertx.eventBus()
@@ -40,8 +43,8 @@ class GameVerticle extends ScalaVerticle {
     //TODO generate name, id and color
 
     val id = UUID.randomUUID.toString
-    val name = generateName()
-    val color = generateColor()
+    val name = nameGenerator.random()
+    val color = colorGenerator.random()
 
     val newPlayer = Player(id, name, color)
 
@@ -57,35 +60,6 @@ class GameVerticle extends ScalaVerticle {
          |}
       """.stripMargin))
   }
-
-  def generateColor(): String = {
-    import scala.util.Random.{nextFloat, nextInt}
-    val hue = nextFloat()
-    // Saturation between 0.1 and 0.3
-    val saturation = (nextInt(2000) + 1000) / 10000f
-    val luminance = 0.9f
-    val color = Color.getHSBColor(hue, saturation, luminance)
-    "#%02X%02X%02X".format(color.getRed, color.getGreen, color.getBlue)
-  }
-
-  def generateName(): String = {
-    import scala.util.Random.nextInt
-    val adjs = List("autumn", "hidden", "bitter", "misty", "silent",
-      "reckless", "daunting", "short", "rising", "strong", "timber", "tumbling",
-      "silver", "dusty", "celestial", "cosmic", "crescent", "double", "far",
-      "terrestrial", "huge", "deep", "epic", "titanic", "mighty", "powerful")
-
-    val nouns = List("waterfall", "river", "breeze", "moon", "rain",
-      "wind", "sea", "morning", "snow", "lake", "sunset", "pine", "shadow", "leaf",
-      "sequoia", "cedar", "wrath", "blessing", "spirit", "nova", "storm", "burst",
-      "giant", "elemental", "throne", "game", "weed", "stone", "apogee", "bang")
-
-    def getRandElt[A](xs: List[A]): A = xs.apply(nextInt(xs.size))
-
-    val xs = List(adjs, nouns).map(getRandElt)
-    xs.mkString("-")
-  }
-
 
   override def stop(p: Promise[Unit]): Unit = {
     logger.info("stopped GameVerticle")
