@@ -61,6 +61,30 @@ class LoggedInGameVerticleTest extends LazyLogging {
   }
 
   @Test
+  def userJoinEvent(context: TestContext): Unit = {
+    val async = context.async()
+
+    eventBus.consumer(GameVerticle.ADDRESS, { message: Message[JsonObject] =>
+      context.assertNotNull(message.body())
+      val json = message.body()
+      context.assertTrue(json.containsKey("type"))
+      context.assertEquals("USER_JOIN", json.getString("type"))
+      context.assertTrue(json.containsKey("payload"))
+      context.assertTrue(json.getJsonObject("payload").containsKey("id"))
+      context.assertTrue(json.getJsonObject("payload").containsKey("name"))
+      context.assertTrue(json.getJsonObject("payload").containsKey("color"))
+      async.complete()
+    })
+
+    eventBus.send(GameVerticle.ADDRESS, new JsonObject(
+      s"""
+        |{
+        |  "type" : "${EventTypes.LOGIN}"
+        |}
+      """.stripMargin))
+  }
+
+  @Test
   def sendingClickResultsInMessage(context: TestContext): Unit = {
     val async = context.async()
     val eventBus = vertx.eventBus()
