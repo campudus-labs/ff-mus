@@ -4,10 +4,8 @@ import Canvas from './Canvas';
 import './app.scss';
 
 const App = (props) => {
-
   const {canvas} = props;
   console.log("canvas prop in App.jsx:", canvas);
-
   return (
     <div>
       <div>
