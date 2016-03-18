@@ -121,7 +121,7 @@ class LoggedInGameVerticleTest extends LazyLogging {
   }
 
   @Test
-  def reveiveAllEventsAfterLogin(context: TestContext): Unit = {
+  def receiveAllEventsAfterLogin(context: TestContext): Unit = {
     val async = context.async()
     val x1 = 1
     val y1 = 1
