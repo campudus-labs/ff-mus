@@ -7,8 +7,8 @@ import io.vertx.core.http.HttpClientResponse
 import io.vertx.ext.unit.TestContext
 import io.vertx.ext.unit.junit.{Timeout, VertxUnitRunner}
 import io.vertx.scala.FunctionConverters._
-import org.junit.{Rule, Before, Test}
 import org.junit.runner.RunWith
+import org.junit.{Before, Rule, Test}
 
 import scala.util.{Failure, Success, Try}
 

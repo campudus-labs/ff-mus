@@ -21,10 +21,12 @@ sealed abstract class Event(eventType: String) {
 
 object EventTypes {
   val LOGIN = "LOGIN"
+  val LOGOUT = "LOGOUT"
   val LOGIN_REPLY = "LOGIN_REPLY"
   val USER_JOIN = "USER_JOIN"
   val USER_CLICKED = "USER_CLICKED"
   val USER_CLICK = "USER_CLICK"
+  val USER_LEAVE = "USER_LEAVE"
 }
 
 case class UserJoinEvent(id: String, name: String, color: String) extends Event(EventTypes.USER_JOIN) {
@@ -35,6 +37,17 @@ case class UserJoinEvent(id: String, name: String, color: String) extends Event(
          |  "id" : "$id",
          |  "name" : "$name",
          |  "color" : "$color"
+         |}
+       """.stripMargin)
+  }
+}
+
+case class UserLeaveEvent(id: String) extends Event(EventTypes.USER_LEAVE) {
+  override protected def payloadJson: JsonObject = {
+    new JsonObject(
+      s"""
+         |{
+         |  "id" : "$id"
          |}
        """.stripMargin)
   }

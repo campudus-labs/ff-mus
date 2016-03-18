@@ -1,6 +1,5 @@
 package com.campudus.ffmus
 
-import java.util
 import java.util.UUID
 
 import io.vertx.core.eventbus.Message
@@ -20,6 +19,7 @@ object GameVerticle {
 class GameVerticle extends ScalaVerticle {
 
   val events = mutable.MutableList[Event]()
+  val socketIdUserId = mutable.HashMap[String, String]()
 
   val nameGenerator = new NameGenerator
   val colorGenerator = new ColorGenerator
@@ -30,9 +30,11 @@ class GameVerticle extends ScalaVerticle {
 
     eventBus.consumer(GameVerticle.INCOMING_ADDRESS, { message: Message[JsonObject] =>
       val messageType = message.body().getString("type")
+      logger.info(s"GameVerticle got message: $messageType")
 
       messageType match {
         case EventTypes.LOGIN => handleLogin(message)
+        case EventTypes.LOGOUT => handleLogout(message)
         case EventTypes.USER_CLICK => handleClick(message)
       }
     })
@@ -45,6 +47,9 @@ class GameVerticle extends ScalaVerticle {
     val id = UUID.randomUUID.toString
     val name = nameGenerator.random()
     val color = colorGenerator.random()
+
+    val socketId = message.body().getString("socketId")
+    socketIdUserId.put(socketId, id)
 
     val event = UserJoinEvent(id, name, color)
     val allEventsToReply = events.map(_.toJson.encode()).mkString("[", ",", "]")
@@ -65,6 +70,19 @@ class GameVerticle extends ScalaVerticle {
       """.stripMargin))
 
     eventBus.send(GameVerticle.OUTGOING_ADDRESS, event.toJson)
+  }
+
+  def handleLogout(message: Message[JsonObject]) = {
+    val socketId = message.body().getString("socketId")
+    val userIdOpt = socketIdUserId.remove(socketId)
+
+    userIdOpt match {
+      case Some(userId) =>
+        val eventBus = vertx.eventBus()
+        val event = UserLeaveEvent(userId)
+        eventBus.send(GameVerticle.OUTGOING_ADDRESS, event.toJson)
+      case None =>
+    }
   }
 
   def handleClick(message: Message[JsonObject]) = {
