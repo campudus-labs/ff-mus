@@ -39,7 +39,7 @@ class GameVerticleTest extends LazyLogging {
   @Test
   def testLogin(context: TestContext): Unit = {
     val async = context.async()
-    eventBus.send(GameVerticle.ADDRESS, new JsonObject(
+    eventBus.send(GameVerticle.INCOMING_ADDRESS, new JsonObject(
       s"""
         |{
         |  "type" : "${EventTypes.LOGIN}"

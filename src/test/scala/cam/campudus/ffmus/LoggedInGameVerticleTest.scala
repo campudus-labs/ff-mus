@@ -28,11 +28,11 @@ class LoggedInGameVerticleTest extends LazyLogging {
 
     vertx.deployVerticle(new GameVerticle, new DeploymentOptions(), {
       case Success(id) =>
-        vertx.eventBus().send(GameVerticle.ADDRESS, new JsonObject(
+        vertx.eventBus().send(GameVerticle.INCOMING_ADDRESS, new JsonObject(
           s"""
-            |{
-            |  "type" : "${EventTypes.LOGIN}"
-            |}
+             |{
+             |  "type" : "${EventTypes.LOGIN}"
+             |}
           """.stripMargin), {
           case Success(message) =>
             val actualBody = message.body()
@@ -45,7 +45,7 @@ class LoggedInGameVerticleTest extends LazyLogging {
             context.assertNotNull(actualPayload.getString("id"))
             context.assertNotNull(actualPayload.getString("color"))
             context.assertNotNull(actualPayload.getString("name"))
-
+            context.put("userId", actualPayload.getString("id"))
             async.complete()
           case Failure(ex) => context.fail(ex)
         }: Try[Message[JsonObject]] => Unit)
@@ -89,19 +89,20 @@ class LoggedInGameVerticleTest extends LazyLogging {
     val async = context.async()
     val eventBus = vertx.eventBus()
 
-    eventBus.consumer(GameVerticle.ADDRESS, { message: Message[JsonObject] =>
+    eventBus.consumer(GameVerticle.OUTGOING_ADDRESS, { message: Message[JsonObject] =>
       async.complete()
     })
 
-    eventBus.send("mus.game", new JsonObject(
-      """
-        |{
-        |  "type" : "USER_CLICKED",
-        |  "payload" : {
-        |    "x" : 1,
-        |    "y" : 1
-        |  }
-        |}
+    eventBus.send(GameVerticle.INCOMING_ADDRESS, new JsonObject(
+      s"""
+         |{
+         |  "type" : "${EventTypes.USER_CLICK}",
+         |  "payload" : {
+         |    "userId" : "${context.get("userId")}",
+         |    "x" : 1,
+         |    "y" : 1
+         |  }
+         |}
       """.stripMargin))
   }
 

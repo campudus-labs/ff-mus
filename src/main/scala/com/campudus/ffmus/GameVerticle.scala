@@ -1,6 +1,5 @@
 package com.campudus.ffmus
 
-import java.awt.Color
 import java.util.UUID
 
 import io.vertx.core.eventbus.Message
@@ -13,7 +12,8 @@ import io.vertx.scala.FunctionConverters._
 
 
 object GameVerticle {
-  val ADDRESS = "mus.game"
+  val INCOMING_ADDRESS = "mus.game.in"
+  val OUTGOING_ADDRESS = "mus.game.out"
 }
 
 class GameVerticle extends ScalaVerticle {
@@ -27,11 +27,12 @@ class GameVerticle extends ScalaVerticle {
     logger.info("starting GameVerticle")
     val eventBus = vertx.eventBus()
 
-    eventBus.consumer(GameVerticle.ADDRESS, { message: Message[JsonObject] =>
+    eventBus.consumer(GameVerticle.INCOMING_ADDRESS, { message: Message[JsonObject] =>
       val messageType = message.body().getString("type")
 
       messageType match {
         case EventTypes.LOGIN => handleLogin(message)
+        case EventTypes.USER_CLICK => handleClick(message)
       }
     })
 
@@ -59,7 +60,21 @@ class GameVerticle extends ScalaVerticle {
          |}
       """.stripMargin))
 
-    eventBus.send(GameVerticle.ADDRESS, event.toJson)
+    eventBus.send(GameVerticle.OUTGOING_ADDRESS, event.toJson)
+  }
+
+  def handleClick(message: Message[JsonObject]) = {
+    val eventBus = vertx.eventBus()
+
+    val payload = message.body().getJsonObject("payload")
+
+    val userId = payload.getString("userId")
+    val x = payload.getInteger("x")
+    val y = payload.getInteger("y")
+
+    val event = UserClickedEvent(userId, x, y)
+    events += event
+    eventBus.send(GameVerticle.OUTGOING_ADDRESS, event.toJson)
   }
 
   override def stop(p: Promise[Unit]): Unit = {
