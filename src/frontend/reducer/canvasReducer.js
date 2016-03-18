@@ -71,6 +71,33 @@ const initialState = fromJS({
 const reducerMap = {
   [ActionTypes.SET_CANVAS_LAYOUT] : (state, payload) => {
     return state.merge(payload);
+  },
+  [ActionTypes.USER_CLICK] : (state, payload) => {
+    const {number, color} = payload;
+
+    return state.update('tiles', (tiles) => {
+      let colIndex = null;
+      const rowIndex = tiles.findIndex((row) => {
+        let found = false;
+
+        colIndex = row.findIndex((tile) => {
+          if (tile.get('number') === number) {
+            found = true;
+            return true;
+          }
+        });
+
+        return found;
+      });
+
+      console.log('Index: ', rowIndex, colIndex, color);
+
+      return tiles.update(rowIndex, (row) => {
+        return row.update(colIndex, (tile) => {
+          return tile.update('color', () => color);
+        })
+      });
+    });
   }
 };
 

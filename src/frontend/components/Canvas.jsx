@@ -19,9 +19,9 @@ const Canvas = (props) => {
   const renderUsers = () => {
     return users.map((user) => {
       return <User key={user.get('id')}
-                    id={user.get('id')}
-                    name={user.get('name')}
-                    color={user.get('color')}/>;
+                   id={user.get('id')}
+                   name={user.get('name')}
+                   color={user.get('color')}/>;
     })
   };
 
@@ -31,7 +31,9 @@ const Canvas = (props) => {
         return <Tile key={tile.get('number')}
                      number={tile.get('number')}
                      width={calculatedTileWidth}
-                     height={calculatedTileHeight}/>;
+                     height={calculatedTileHeight}
+                     color={tile.get('color')}
+        />;
       })
     })
   };

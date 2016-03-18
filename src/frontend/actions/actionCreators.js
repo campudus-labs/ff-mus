@@ -6,3 +6,11 @@ export function setCanvasLayout(payload) {
     payload
   };
 }
+
+export function userClick(number, color) {
+  return {
+    type : ActionTypes.USER_CLICK,
+    number : number,
+    color : color
+  };
+}
