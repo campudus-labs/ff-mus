@@ -13,6 +13,8 @@ import scala.util.{Try, Failure, Success}
 object HttpVerticle {
   val HTTP_PORT = "http_port"
   val HTTP_HOST = "http_host"
+  val DEFAULT_HTTP_HOST = "localhost"
+  val DEFAULT_HTTP_PORT = 8080
 }
 
 class HttpVerticle extends ScalaVerticle {
@@ -23,8 +25,8 @@ class HttpVerticle extends ScalaVerticle {
     router.route("/out/*").handler(StaticHandler.create.setFilesReadOnly(false).setCacheEntryTimeout(1).setMaxAgeSeconds(2))
     router.route("/eventbus/*").handler(createSockJSBridge)
 
-    val port = config.getInteger(HttpVerticle.HTTP_PORT, 8080)
-    val host = config.getString(HttpVerticle.HTTP_HOST, "localhost")
+    val port = config.getInteger(HttpVerticle.HTTP_PORT, HttpVerticle.DEFAULT_HTTP_PORT)
+    val host = config.getString(HttpVerticle.HTTP_HOST, HttpVerticle.DEFAULT_HTTP_HOST)
 
     vertx.createHttpServer.requestHandler(router.accept(_: HttpServerRequest)).listen(port, host, {
       case Success(server) =>
