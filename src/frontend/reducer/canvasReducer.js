@@ -4,23 +4,31 @@ import { fromJS } from 'immutable';
 const initialState = fromJS({
   width : 500,
   height : 500,
-  users : [
-    {
-      id : 1,
-      name : "User-1",
-      color : "#f00"
-    },
-    {
-      id : 2,
-      name : "User-2",
-      color : "#0f0"
-    },
-    {
-      id : 3,
-      name : "User-3",
-      color : "#00f"
+  users : {
+    myUserId : 2,
+    order : [
+      1,
+      2,
+      3
+    ],
+    entities : {
+      1 : {
+        id : 1,
+        name : "User-1",
+        color : "#f00"
+      },
+      2 : {
+        id : 2,
+        name : "User-2",
+        color : "#0f0"
+      },
+      3 : {
+        id : 3,
+        name : "User-3",
+        color : "#00f"
+      }
     }
-  ],
+  },
   tilesDimensions : [0, 0],
   tiles : [
     [
@@ -90,11 +98,15 @@ const reducerMap = {
         return found;
       });
 
-      console.log('Index: ', rowIndex, colIndex, color);
-
       return tiles.update(rowIndex, (row) => {
         return row.update(colIndex, (tile) => {
-          return tile.update('color', () => color);
+          return tile.update('color', (currentColor) => {
+            if (currentColor) {
+              return null;
+            } else {
+              return color;
+            }
+          });
         })
       });
     });

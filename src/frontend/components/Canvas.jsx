@@ -3,6 +3,9 @@ import {List} from 'immutable';
 import './canvas.scss';
 import Tile from './Tile.jsx';
 import User from './User.jsx';
+import { connect } from 'react-redux';
+
+import {userClick} from "../actions/actionCreators";
 
 const Canvas = (props) => {
   console.log('Canvas with Props: ', props);
@@ -16,13 +19,19 @@ const Canvas = (props) => {
   let calculatedTileWidth = width / tiles.get(0).count();
   let calculatedTileHeight = height / tiles.count();
 
+  const onTileClick = (number, event) => {
+    event.preventDefault();
+    const currentColor = users.getIn(['entities', users.get('myUserId').toString(), "color"]);
+    props.dispatch(userClick(number, currentColor));
+  };
+
   const renderUsers = () => {
-    return users.map((user) => {
+    return users.get('entities').map((user) => {
       return <User key={user.get('id')}
                    id={user.get('id')}
                    name={user.get('name')}
                    color={user.get('color')}/>;
-    })
+    }).toList();
   };
 
   const renderTiles = () => {
@@ -33,6 +42,7 @@ const Canvas = (props) => {
                      width={calculatedTileWidth}
                      height={calculatedTileHeight}
                      color={tile.get('color')}
+                     onClick={onTileClick}
         />;
       })
     })
@@ -57,4 +67,12 @@ Canvas.propTypes = {
   tiles : React.PropTypes.instanceOf(List)
 };
 
-export default Canvas;
+const mapStateToProps = state => {
+  return {canvas : state.app.get('canvas')};
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {dispatch : dispatch};
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Canvas);
