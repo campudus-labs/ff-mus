@@ -1,0 +1,166 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
+        classpath 'org.scoverage:gradle-scoverage:1.0.9'
+        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.4.0'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'scala'
+apply plugin: 'application'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'scoverage'
+apply plugin: 'com.github.kt3k.coveralls'
+
+project.group = 'com.campudus'
+project.version = '1.0.0'
+
+def vertxVersion = '3.2.1'
+def scalaVersion = '2.11.7'
+
+if (!JavaVersion.current().java8Compatible) {
+    throw new IllegalStateException("This needs Java 8.")
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+}
+
+configurations {
+    compileOnly
+}
+
+dependencies {
+    compile "org.scala-lang:scala-library:${scalaVersion}"
+
+    compile "io.vertx:vertx-core:${vertxVersion}"
+    compile "io.vertx:vertx-web:${vertxVersion}"
+
+    compile 'joda-time:joda-time:2.9.1'
+    compile 'com.typesafe.scala-logging:scala-logging_2.11:3.1.0'
+    compile 'org.slf4j:slf4j-jdk14:1.7.13'
+
+    compile 'com.jcabi:jcabi-manifests:1.1'
+
+    scoverage 'org.scoverage:scalac-scoverage-plugin_2.11:1.1.1'
+    scoverage 'org.scoverage:scalac-scoverage-runtime_2.11:1.1.1'
+
+    testCompile "io.vertx:vertx-unit:${vertxVersion}"
+    testCompile 'junit:junit:4.12'
+}
+
+mainClassName = "io.vertx.core.Launcher"
+def mainVerticle = "com.campudus.ffmus.Starter"
+
+checkScoverage {
+    minimumRate = 0.85
+}
+
+test {
+    maxHeapSize = "512m"
+    jvmArgs "-Xmx512m"
+}
+
+testScoverage {
+    maxHeapSize = "512m"
+    jvmArgs "-Xmx512m"
+}
+
+run {
+    args = [
+            "run",
+            mainVerticle,
+            "-conf", "conf.json"
+    ]
+}
+
+task runRedeploy(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+
+    main = mainClassName
+
+    args = [
+            "run",
+            mainVerticle,
+            "-conf", "conf.json",
+            "--redeploy=src/main/**/*.scala",
+            "--launcher-class=${mainClassName}",
+            "--on-redeploy=./gradlew shadowJar"
+    ]
+}
+
+// activate Zinc incremental compilation
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.useAnt = false
+    scalaCompileOptions.useCompileDaemon = true
+    scalaCompileOptions.daemonServer = "localhost:4243"
+}
+
+// let Scala compiler do everything – even java stuff
+sourceSets {
+    main {
+        compileClasspath += configurations.compileOnly
+
+        scala {
+            srcDirs = ['src/main/scala']
+        }
+        java {
+            srcDirs = []
+        }
+    }
+    test {
+        compileClasspath += configurations.compileOnly
+    }
+}
+
+def coverageReportPath = "${buildDir}/reports/scoverage/cobertura.xml".toString()
+
+coveralls {
+    service = "travis-ci"
+
+    def sourceDirStrings = new ArrayList()
+    subprojects.sourceSets.main.allSource.srcDirs.each {
+        it.each {
+            java.nio.file.Path absPath = Paths.get(it.toString())
+            java.nio.file.Path basePath = Paths.get(System.getProperty("user.dir"))
+            java.nio.file.Path relPath = basePath.relativize(absPath)
+            sourceDirStrings.add(relPath.toString())
+        }
+    }
+
+    sourceDirs = sourceDirStrings.flatten()
+
+    coberturaReportPath = coverageReportPath
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': mainClassName
+        attributes 'Main-Verticle': mainVerticle
+        attributes 'Implementation-Vendor': project.group
+        attributes 'Implementation-Title': project.name
+        attributes 'Implementation-Version': project.version
+    }
+}
+
+shadowJar {
+    classifier = 'fat'
+
+    mergeServiceFiles {
+        include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
+    }
+}
+
+assemble.dependsOn shadowJar
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.10'
+}
