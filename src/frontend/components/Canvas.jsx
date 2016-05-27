@@ -5,6 +5,7 @@ import User from './User.jsx';
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import { userClick } from '../actions/actionCreators';
+import { Motion, spring } from 'react-motion';
 
 const Canvas = (props) => {
   console.log('Canvas with Props: ', props);
@@ -22,7 +23,7 @@ const Canvas = (props) => {
   const onTileClick = (number, event) => {
     event.preventDefault();
     const myUserId = users.myUserId;
-    
+
     const currentColor = users.entities[`${users.myUserId}`]['color'];
     props.dispatch(userClick(number, currentColor));
   };
@@ -39,15 +40,16 @@ const Canvas = (props) => {
   };
 
   const renderTiles = () => {
-    return tiles.map((row) => {
-      return row.map((tile)=> {
-        return <Tile key={tile.number}
-                     number={tile.number}
-                     width={calculatedTileWidth}
-                     height={calculatedTileHeight}
-                     color={tile.color}
-                     onClick={onTileClick}
-        />;
+    return tiles.map(row => {
+      return row.map(tile => {
+        return (
+          <Tile key={tile.number}
+                number={tile.number}
+                color={tile.color}
+                onClick={onTileClick}
+                width={calculatedTileWidth}
+                height={calculatedTileHeight}
+          />)
       })
     })
   };
