@@ -29,7 +29,7 @@ const handleServerReply = (error, payload) => {
 };
 
 //Login to server
-store.dispatch(loginRequest(handleServerReply));
+// store.dispatch(loginRequest(handleServerReply));
 
 if (process.env.NODE_ENV === 'development') {
   const showDevTools = require('./showDevTools').default;

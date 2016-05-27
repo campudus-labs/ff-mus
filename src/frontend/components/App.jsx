@@ -9,19 +9,17 @@ const App = (props) => {
   return (
     <div>
       <div>
-        <Canvas x={canvas.get("x")}
-                y={canvas.get("y")}
-                width={canvas.get("width")}
-                height={canvas.get("height")}
-                users={canvas.get("users")}
-                tiles={canvas.get("tiles")}/>
+        <Canvas x={canvas.x}
+                y={canvas.y}
+                width={canvas.width}
+                height={canvas.height}
+                users={canvas.users}
+                tiles={canvas.tiles}/>
       </div>
     </div>
   );
 };
 
-const mapStateToProps = state => {
-  return {canvas : state.app.get('canvas')};
-};
-
-export default connect(mapStateToProps)(App);
+export default connect(state => {
+  return {canvas : state.app.canvas};
+})(App);

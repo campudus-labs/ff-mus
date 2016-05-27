@@ -1,26 +1,26 @@
 import ActionTypes from '../actions/actionTypes';
-import { fromJS } from 'immutable';
+import _ from 'lodash';
 
-const initialState = fromJS({
+const initialState = {
   width : 500,
   height : 500,
   serverStatus : {
     isRequesting : false,
-    isConnecting : false,
+    isConnecting : false
   },
   users : {
-    myUserId : 2,
+    myUserId : 1,
     order : [/*
      1,
      2,
      3
      */],
     entities : {
-      /*1 : {
-       id : 1,
-       name : "User-1",
-       color : "#f00"
-       },
+      1 : {
+        id : 1,
+        name : "User-1",
+        color : "#f00"
+      }/*,
        2 : {
        id : 2,
        name : "User-2",
@@ -78,73 +78,72 @@ const initialState = fromJS({
       }
     ]
   ]
-});
+};
 
 const reducerMap = {
   [ActionTypes.SET_CANVAS_LAYOUT] : (state, payload) => {
-    return state.merge(payload);
+    return _.merge(state, payload);
   },
   [ActionTypes.USER_CLICK] : (state, payload) => {
     const {number, color} = payload;
-
-    return state.update('tiles', (tiles) => {
-      let colIndex = null;
-      const rowIndex = tiles.findIndex((row) => {
-        let found = false;
-
-        colIndex = row.findIndex((tile) => {
-          if (tile.get('number') === number) {
-            found = true;
-            return true;
+    console.log("tiles", state.tiles);
+    const tiles = _.reduce(state.tiles, (result, tileRow, tileRowIndex)=> {
+      const tileRowArray = _.map(tileRow, (tileObj, tileObjIndex)=> {
+        if (tileObj.number === number) {
+          return {
+            number : tileObj.number,
+            color : color
           }
-        });
-
-        return found;
+        } else {
+          return {
+            number : tileObj.number,
+            color : null
+          }
+        }
       });
 
-      return tiles.update(rowIndex, (row) => {
-        return row.update(colIndex, (tile) => {
-          return tile.update('color', (currentColor) => {
-            if (currentColor) {
-              return null;
-            } else {
-              return color;
-            }
-          });
-        })
-      });
-    });
+      result.push(tileRowArray);
+
+      return result;
+    }, []);
+
+    return _.merge({}, state, {tiles : tiles});
+
   },
 
   [ActionTypes.LOGIN_REQUEST] : (state) => {
-    return state.updateIn(["serverStatus", "isConnecting"], () => true);
+    return _.merge({}, state, {serverStatus : {isConnecting : true}});
   },
 
   [ActionTypes.LOGIN_SUCCESS] : (state, payload) => {
     console.log("Login success:", payload, "payload.id:", payload.id);
-    return state.updateIn(["serverStatus", "isConnecting"], () => false);
+    return _.merge({}, state, {serverStatus : {isConnecting : false}});
   },
 
   [ActionTypes.LOGIN_FAILED] : (state, error) => {
     console.error("Login failed:", error);
-    return state.updateIn(["serverStatus", "isConnecting"], () => false);
+    return _.merge({}, state, {serverStatus : {isConnecting : false}});
   },
 
   [ActionTypes.USER_JOIN] : (state, payload) => {
     console.log("Login USER_JOIN:", payload);
     //Push user to entities
-    return state.setIn(["users", "entities", payload.id], () => {
-      return fromJS({
-        id : payload.id,
-        name : payload.name,
-        color : payload.color
-      });
+    return _.merge({}, state, {
+      users : {
+        entities : {
+          [payload.id] : {
+            id : payload.id,
+            name : payload.name,
+            color : payload.color
+          }
+        }
+      }
     });
   },
 
   [ActionTypes.SET_MY_USER_ID] : (state, payload) => {
     console.error("Login SET_MY_USER_ID:", payload);
-    return state.updateIn(["users", "myUserId"], () => payload.id);
+    return _.merge({}, state, {users : {myUserId : payload.id}});
   }
 
 };

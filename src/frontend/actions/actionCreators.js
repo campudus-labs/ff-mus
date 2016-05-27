@@ -1,6 +1,6 @@
 import ActionTypes from './actionTypes';
 import 'file!./../vendor/sockjs-0.3.4.min.js';
-import EventBus from './../vendor/vertx-eventbus.js';
+// import EventBus from './../vendor/vertx-eventbus.js';
 
 const incoming = 'mus.game.in';
 const outgoing = 'mus.game.out';
@@ -67,20 +67,20 @@ export function loginSuccess(payload) {
   };
 }
 
-export function loginRequest(replyHandler) {
-  return (dispatch) => {
-    dispatch({
-      type : ActionTypes.LOGIN_REQUEST
-    });
-
-    const eb = new EventBus('http://10.10.2.45:8080/eventbus');
-    eb.onopen = function () {
-      // set a handler to receive a message
-      eb.registerHandler(outgoing, function (error, message) {
-      });
-
-      // send a message
-      eb.send(incoming, {type : 'LOGIN'}, replyHandler);
-    };
-  }
-}
+// export function loginRequest(replyHandler) {
+//   return (dispatch) => {
+//     dispatch({
+//       type : ActionTypes.LOGIN_REQUEST
+//     });
+//
+//     const eb = new EventBus('http://10.10.2.45:8080/eventbus');
+//     eb.onopen = function () {
+//       // set a handler to receive a message
+//       eb.registerHandler(outgoing, function (error, message) {
+//       });
+//
+//       // send a message
+//       eb.send(incoming, {type : 'LOGIN'}, replyHandler);
+//     };
+//   }
+// }

@@ -1,47 +1,51 @@
 import React from 'react';
-import {List} from 'immutable';
 import './canvas.scss';
 import Tile from './Tile.jsx';
 import User from './User.jsx';
 import { connect } from 'react-redux';
-
-import {userClick} from "../actions/actionCreators";
+import _ from 'lodash';
+import { userClick } from '../actions/actionCreators';
 
 const Canvas = (props) => {
   console.log('Canvas with Props: ', props);
-  const {width,height,tiles, users} = props;
+  const {width, height, tiles, users, dispatch} = props;
+
   //Action SetTile dimensions
   const canvasStyle = {
     width : width + "px",
     height : height + "px"
   };
 
-  let calculatedTileWidth = width / tiles.get(0).count();
-  let calculatedTileHeight = height / tiles.count();
+  let calculatedTileWidth = width / tiles[0].length;
+  let calculatedTileHeight = height / tiles.length;
 
   const onTileClick = (number, event) => {
     event.preventDefault();
-    const currentColor = users.getIn(['entities', users.get('myUserId').toString(), "color"]);
+    const myUserId = users.myUserId;
+    
+    const currentColor = users.entities[`${users.myUserId}`]['color'];
     props.dispatch(userClick(number, currentColor));
   };
 
   const renderUsers = () => {
-    return users.get('entities').map((user) => {
-      return <User key={user.get('id')}
-                   id={user.get('id')}
-                   name={user.get('name')}
-                   color={user.get('color')}/>;
-    }).toList();
+    const userEntities = users.entities;
+
+    return _.map(userEntities, (user) => {
+      return <User key={user.id}
+                   id={user.id}
+                   name={user.name}
+                   color={user.color}/>;
+    });
   };
 
   const renderTiles = () => {
     return tiles.map((row) => {
       return row.map((tile)=> {
-        return <Tile key={tile.get('number')}
-                     number={tile.get('number')}
+        return <Tile key={tile.number}
+                     number={tile.number}
                      width={calculatedTileWidth}
                      height={calculatedTileHeight}
-                     color={tile.get('color')}
+                     color={tile.color}
                      onClick={onTileClick}
         />;
       })
@@ -64,15 +68,9 @@ Canvas.propTypes = {
   width : React.PropTypes.number.isRequired,
   height : React.PropTypes.number.isRequired,
   users : React.PropTypes.object,
-  tiles : React.PropTypes.instanceOf(List)
+  tiles : React.PropTypes.array
 };
 
-const mapStateToProps = state => {
-  return {canvas : state.app.get('canvas')};
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {dispatch : dispatch};
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Canvas);
+export default connect(state => {
+  return {canvas : state.app.canvas};
+})(Canvas);
